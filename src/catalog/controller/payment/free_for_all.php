@@ -1,12 +1,14 @@
 <?php
 namespace Opencart\Catalog\Controller\Extension\FreeForAll\Payment;
 
-class FreeForAll extends \Opencart\System\Engine\Controller {
+class FreeForAll extends \Opencart\System\Engine\Controller
+{
 
 	/**
 	 * @return string
 	 */
-	public function index(): string {
+	public function index(): string
+	{
 		$this->load->language('extension/free_for_all/payment/free_for_all');
 
 		$data['language'] = $this->config->get('config_language');
@@ -17,7 +19,8 @@ class FreeForAll extends \Opencart\System\Engine\Controller {
 	/**
 	 * @return void
 	 */
-	public function confirm(): void {
+	public function confirm(): void
+	{
 		$this->load->language('extension/free_for_all/payment/free_for_all');
 
 		$json = [];
@@ -41,7 +44,17 @@ class FreeForAll extends \Opencart\System\Engine\Controller {
 		$this->response->addHeader('Content-Type: application/json');
 		$this->response->setOutput(json_encode($json));
 
-		// Output information about the customer and the order
+		$this->output_information();
+
+		//$this->send_message();
+		$this->send_http_get();
+	}
+
+	/**
+	 * Output information about the customer and the order.
+	 */
+	private function output_information(): void
+	{
 		$bestellung = $this->session->data['order_id'];
 		$this->log->write('Bestellung Nr. ' . $bestellung);
 		$kunde = $this->session->data['customer_id'];
@@ -60,47 +73,68 @@ class FreeForAll extends \Opencart\System\Engine\Controller {
 			}
 		}
 		//$this->log->write('Inhalt des Warenkorbs: ' . json_encode($this->cart->getProducts()));
-		
-		// Send information to MES system
-		//$this->send_message('Data: ' . $bestellung . ',' . $kunde . ',' . $produkt);
-}
-
-	private function send_message($message): void {
-		/* Get the port for the WWW service. */
-		$service_port = 4444; //getservbyname('www', 'tcp');
-
-		/* Get the IP address for the target host. */
-		$address = '192.168.0.1'; //gethostbyname('www.example.com');
-
-		/* Create a TCP/IP socket. */
-		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		if ($socket === false) {
-			echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
-		} else {
-			echo "OK.\n";
-		}
-
-		echo "Attempting to connect to '$address' on port '$service_port'...";
-		$result = socket_connect($socket, $address, $service_port);
-		if ($result === false) {
-			echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
-		} else {
-			echo "OK.\n";
-		}
-
-		echo "Sending data...";
-		socket_write($socket, $message, strlen($message));
-		echo "OK.\n";
-
-		echo "Reading response:\n\n";
-		$out = '';
-		while ($out = socket_read($socket, 2048)) {
-			echo $out;
-		}
-
-		echo "Closing socket...";
-		socket_close($socket);
-		echo "OK.\n\n";
 	}
 
+	private function send_http_get(): void {
+		$ch = curl_init();
+		$url = 'http://192.168.10.52:4444';
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		$result = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+	}
+
+	/**
+	 * Send information to MES system.
+	 */
+	private function send_message(): void
+	{
+		// get the port for the WWW service
+		$service_port = 4444;
+
+		// get the IP address for the target host
+		$address = '192.168.10.52'; // gethostbyname('www.example.com');
+
+		// create a TCP/IP socket
+		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		if ($socket === false) {
+			$this->log->write("socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n");
+		} else {
+			$this->log->write("OK.\n");
+		}
+
+		$this->log->write("Attempting to connect to '$address' on port '$service_port'...");
+		$result = socket_connect($socket, $address, $service_port);
+		if ($result === false) {
+			$this->log->write("socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n");
+		} else {
+			$this->log->write("OK.\n");
+		}
+
+		// collect all information to be sent to MES system
+		$bestellung = $this->session->data['order_id'];
+		$kunde = $this->session->data['customer_id'];
+		$produkte = '';
+		foreach ($this->cart->getProducts() as $produkt) {
+			$produkte .= $produkt['product_id'];
+		}
+		$message = 'Data: ' . $bestellung . ',' . $kunde . ',' . $produkte . "\r\n";
+
+		// write information to socket
+		$this->log->write("Sending data...");
+		socket_write($socket, $message, strlen($message));
+		$this->log->write("OK.\n");
+
+		//$this->log->write("Reading response:\n\n");
+		//$out = '';
+		//while ($out = socket_read($socket, 2048)) {
+		//	$this->log->write($out);
+		//}
+
+		$this->log->write("Closing socket...");
+		socket_close($socket);
+		$this->log->write("OK.\n\n");
+	}
 }
