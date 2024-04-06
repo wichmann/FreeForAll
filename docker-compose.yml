@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+  mariadb:
+    image: mariadb:10
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW --innodb_read_only_compressed=OFF
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    environment:
+      - MARIADB_USER=bn_opencart
+      - MARIADB_DATABASE=bitnami_opencart
+      - MARIADB_PASSWORD=bitnami
+      - MARIADB_ROOT_PASSWORD=buN3aehee7Ahqueejah9oov9eezech
+
+  opencart:
+    image: bitnami/opencart:4
+    ports:
+      # extern:intern
+      - 80:8080
+      #- 443:8443
+    environment:
+      # Eintrag in hosts-Datei hinzufügen: 192.168.0.1  shop.gaming.ei
+      # Aufruf des Shops: http://shop.gaming.ei/administration
+      - OPENCART_HOST=shop.gaming.ei
+      - OPENCART_EXTERNAL_HTTP_PORT_NUMBER=80
+      #- OPENCART_EXTERNAL_HTTPS_PORT_NUMBER=443
+      #- OPENCART_ENABLE_HTTPS=yes
+      - OPENCART_DATABASE_HOST=mariadb
+      - OPENCART_DATABASE_PORT_NUMBER=3306
+      - OPENCART_DATABASE_USER=bn_opencart
+      - OPENCART_DATABASE_NAME=bitnami_opencart
+      - OPENCART_DATABASE_PASSWORD=bitnami
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      #- ALLOW_EMPTY_PASSWORD=yes
+      - OPENCART_USERNAME=admin
+      - OPENCART_PASSWORD=123456
+      - OPENCART_EMAIL=wichmann@bbs-os-brinkstr.de
+      # SMTP
+      #- OPENCART_SMTP_HOST=smtp.gmail.com
+      #- OPENCART_SMTP_PORT=587
+      #- OPENCART_SMTP_USER=your_email@gmail.com
+      #- OPENCART_SMTP_PASSWORD=your_password
+    volumes:
+      - opencart_data:/bitnami/opencart
+      - opencart_storage_data:/bitnami/opencart_storage/
+    depends_on:
+      - mariadb
+
+volumes:
+  mariadb_data:
+    driver: local
+  opencart_data:
+    driver: local
+  opencart_storage_data:
+    driver: local
