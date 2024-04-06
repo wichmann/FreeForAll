@@ -6,11 +6,13 @@ namespace Opencart\Admin\Controller\Extension\FreeForAll\Payment;
  *
  * @package Opencart\Admin\Controller\Extension\FreeForAll\Payment
  */
-class FreeForAll extends \Opencart\System\Engine\Controller {
+class FreeForAll extends \Opencart\System\Engine\Controller
+{
 	/**
 	 * @return void
 	 */
-	public function index(): void {
+	public function index(): void
+	{
 		$this->load->language('extension/free_for_all/payment/free_for_all');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -54,7 +56,8 @@ class FreeForAll extends \Opencart\System\Engine\Controller {
 	/**
 	 * @return void
 	 */
-	public function save(): void {
+	public function save(): void
+	{
 		$this->load->language('extension/free_for_all/payment/free_for_all');
 
 		$json = [];
@@ -76,18 +79,18 @@ class FreeForAll extends \Opencart\System\Engine\Controller {
 	}
 
 	/*public function install(): void {
-		if ($this->user->hasPermission('modify', 'extension/payment')) {
-			$this->load->model('extension/oc_payment_example/payment/credit_card');
+		   if ($this->user->hasPermission('modify', 'extension/payment')) {
+			   $this->load->model('extension/oc_payment_example/payment/credit_card');
 
-			$this->model_extension_oc_payment_example_payment_credit_card->install();
-		}
-	}*/
+			   $this->model_extension_oc_payment_example_payment_credit_card->install();
+		   }
+	   }*/
 
 	/*public function uninstall(): void {
-		if ($this->user->hasPermission('modify', 'extension/payment')) {
-			$this->load->model('extension/oc_payment_example/payment/credit_card');
+		   if ($this->user->hasPermission('modify', 'extension/payment')) {
+			   $this->load->model('extension/oc_payment_example/payment/credit_card');
 
-			$this->model_extension_oc_payment_example_payment_credit_card->uninstall();
-		}
-	}*/
+			   $this->model_extension_oc_payment_example_payment_credit_card->uninstall();
+		   }
+	   }*/
 }
